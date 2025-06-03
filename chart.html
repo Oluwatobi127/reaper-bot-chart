@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Live Token Chart</title>
+  <script src="https://unpkg.com/lightweight-charts@3.6.0/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+  <h2>Live Candlestick Chart</h2>
+  <div id="chart" style="width: 700px; height: 400px;"></div>
+
+  <script>
+    // Parse token mint from URL query param
+    const urlParams = new URLSearchParams(window.location.search);
+    const tokenMint = urlParams.get("token") || "default";
+
+    const chart = LightweightCharts.createChart(document.getElementById("chart"), {
+      width: 700,
+      height: 400,
+      layout: {
+        backgroundColor: "#ffffff",
+        textColor: "#000",
+      },
+      grid: {
+        vertLines: { color: "#eee" },
+        horzLines: { color: "#eee" },
+      },
+      timeScale: {
+        timeVisible: true,
+        secondsVisible: false,
+      },
+    });
+
+    const candleSeries = chart.addCandlestickSeries();
+
+    // Dummy candle data for demo (you'll replace with real API calls)
+    let candles = [
+      { time: 1685856000, open: 10, high: 12, low: 9, close: 11 },
+      { time: 1685863200, open: 11, high: 14, low: 10, close: 13 },
+      { time: 1685870400, open: 13, high: 15, low: 12, close: 14 },
+      { time: 1685877600, open: 14, high: 16, low: 13, close: 15 },
+      { time: 1685884800, open: 15, high: 17, low: 14, close: 16 },
+    ];
+
+    // Function to fetch candle data from your own API
+    async function fetchCandleData() {
+      try {
+        // TODO: Replace URL below with your real API endpoint
+        // const response = await fetch(`https://your-api.com/candles?token=${tokenMint}`);
+        // candles = await response.json();
+
+        candleSeries.setData(candles);
+      } catch (e) {
+        console.error("Failed to fetch candle data:", e);
+      }
+    }
+
+    fetchCandleData();
+
+    // Optional: refresh every minute
+    setInterval(fetchCandleData, 60000);
+  </script>
+</body>
+</html>
