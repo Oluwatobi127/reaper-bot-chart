@@ -2,63 +2,55 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Live Token Chart</title>
-  <script src="https://unpkg.com/lightweight-charts@3.6.0/dist/lightweight-charts.standalone.production.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Token Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 10px;
+      background: #0f0f0f;
+      color: white;
+    }
+    h2 { color: #00ffcc; }
+    .info { margin-bottom: 20px; }
+    iframe { width: 100%; height: 500px; border: none; }
+  </style>
 </head>
 <body>
-  <h2>Live Candlestick Chart</h2>
-  <div id="chart" style="width: 700px; height: 400px;"></div>
+  <h2>Token Dashboard</h2>
+  <div class="info">
+    <p id="tokenName">Token: Loading...</p>
+    <p id="tokenPrice">Price: Loading...</p>
+    <p id="tokenLiquidity">Liquidity: Loading...</p>
+    <p id="tokenMarketCap">Market Cap: Loading...</p>
+  </div>
+  <iframe id="chartFrame" src=""></iframe>
 
   <script>
-    // Parse token mint from URL query param
-    const urlParams = new URLSearchParams(window.location.search);
-    const tokenMint = urlParams.get("token") || "default";
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
 
-    const chart = LightweightCharts.createChart(document.getElementById("chart"), {
-      width: 700,
-      height: 400,
-      layout: {
-        backgroundColor: "#ffffff",
-        textColor: "#000",
-      },
-      grid: {
-        vertLines: { color: "#eee" },
-        horzLines: { color: "#eee" },
-      },
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: false,
-      },
-    });
+    if (!token) {
+      document.body.innerHTML = "<h3>Token address not found!</h3>";
+    } else {
+      const API = `https://api.dexscreener.com/latest/dex/tokens/${token}`;
 
-    const candleSeries = chart.addCandlestickSeries();
+      fetch(API)
+        .then(res => res.json())
+        .then(data => {
+          const pair = data.pairs[0];
+          document.getElementById("tokenName").textContent = "Token: " + (pair.baseToken?.name || "Unknown");
+          document.getElementById("tokenPrice").textContent = "Price: $" + (pair.priceUsd || "N/A");
+          document.getElementById("tokenLiquidity").textContent = "Liquidity: $" + (pair.liquidity?.usd || "N/A");
+          document.getElementById("tokenMarketCap").textContent = "Market Cap: $" + (pair.fdv || "N/A");
 
-    // Dummy candle data for demo (you'll replace with real API calls)
-    let candles = [
-      { time: 1685856000, open: 10, high: 12, low: 9, close: 11 },
-      { time: 1685863200, open: 11, high: 14, low: 10, close: 13 },
-      { time: 1685870400, open: 13, high: 15, low: 12, close: 14 },
-      { time: 1685877600, open: 14, high: 16, low: 13, close: 15 },
-      { time: 1685884800, open: 15, high: 17, low: 14, close: 16 },
-    ];
-
-    // Function to fetch candle data from your own API
-    async function fetchCandleData() {
-      try {
-        // TODO: Replace URL below with your real API endpoint
-        // const response = await fetch(`https://your-api.com/candles?token=${tokenMint}`);
-        // candles = await response.json();
-
-        candleSeries.setData(candles);
-      } catch (e) {
-        console.error("Failed to fetch candle data:", e);
-      }
+          document.getElementById("chartFrame").src = `https://dexscreener.com/solana/${pair.pairAddress}`;
+        })
+        .catch(err => {
+          document.body.innerHTML = "<h3>Error loading data</h3>";
+          console.error(err);
+        });
     }
-
-    fetchCandleData();
-
-    // Optional: refresh every minute
-    setInterval(fetchCandleData, 60000);
   </script>
 </body>
 </html>
